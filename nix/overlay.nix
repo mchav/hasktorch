@@ -14,17 +14,10 @@ final: prev: let
   c10 = libtorch-bin;
   torch_cpu = libtorch-bin;
   ghcName = "ghc984";
-  libtorch_2_5_0_cpu = final.fetchzip {
-    name = "libtorch-2.5.0-cpu.zip";
-    url  = "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.5.0%2Bcpu.zip";
-    hash = "sha256-VFbzEB8LJiVsKIpb2KkSOdvJQY6uR9RyvratKiY8wUs=";
-    stripRoot = false;
-  };
-  libtokenizers = final.fetchzip {
-    name = "libtokenizers.zip";
-    url = "https://github.com/hasktorch/tokenizers/releases/download/libtokenizers-v0.1/libtokenizers-linux.zip";
-    hash = "sha256-9XJLgvS+j01IX2Dh+9K5J9khU/8RnS4IqwBOkf+An4g=";
-    stripRoot = false; # keep the top-level "libtorch" folder
+  hasktorchParams = {
+    LIBTORCH_SKIP_DOWNLOAD = "1";
+    LIBTORCH_HOME= lib.getInclude torch;
+    LIBTORCH_CUDA_VERSION = prev.cudaPackages.cudaMajorMinorVersion;
   };
 in {
   haskell =
@@ -37,223 +30,23 @@ in {
             prev.haskell.packages.${ghcName}.extend
             (hfinal: hprev: {
               # Hasktorch Packages
-              libtorch-2_5_0-cpu = libtorch_2_5_0_cpu;
-              codegen = (hfinal.callCabal2nix "codegen" ../codegen {}).overrideAttrs (old: {
-                  preConfigure = (old.preConfigure or "") + ''
-                    export HOME="$TMPDIR"
-                    export XDG_CACHE_HOME="$TMPDIR"
-                    export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                    export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                    export LIBTORCH_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                    export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                    export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                    export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                  '';
-                  preBuild = (old.preBuild or "") + ''
-                    export HOME="$TMPDIR"
-                    export XDG_CACHE_HOME="$TMPDIR"
-                    export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                    export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                    export LIBTORCH_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                    export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                    export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                    export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                  '';
-                  preInstall = (old.preInstall or "") + ''
-                    export HOME="$TMPDIR"
-                    export XDG_CACHE_HOME="$TMPDIR"
-                    export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                    export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                    export LIBTORCH_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                    export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                    export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                    export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                  '';
-                });
+              codegen = (hfinal.callCabal2nix "codegen" ../codegen {}).overrideAttrs hasktorchParams;
               hasktorch-gradually-typed =
                 lib.pipe
-                (hfinal.callCabal2nix "hasktorch-gradually-typed" ../experimental/gradually-typed {})
+                  ((hfinal.callCabal2nix "hasktorch-gradually-typed" ../experimental/gradually-typed {}).overrideAttrs hasktorchParams)
                 [
-                  (drv: drv.overrideAttrs (old: {
-                    preConfigure = (old.preConfigure or "") + ''
-                      export HOME="$TMPDIR"
-                      export XDG_CACHE_HOME="$TMPDIR"
-                      export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                      export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                      export LIBTORCH_SKIP_DOWNLOAD=1
-                      ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                      export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                      ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                      export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                      export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                    '';
-                    preBuild = (old.preBuild or "") + ''
-                      export HOME="$TMPDIR"
-                      export XDG_CACHE_HOME="$TMPDIR"
-                      export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                      export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                      export LIBTORCH_SKIP_DOWNLOAD=1
-                      ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                      export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                      ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                      export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                      export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                    '';
-                    preInstall = (old.preInstall or "") + ''
-                      export HOME="$TMPDIR"
-                      export XDG_CACHE_HOME="$TMPDIR"
-                      export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                      export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                      export LIBTORCH_SKIP_DOWNLOAD=1
-                      ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                      export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                      ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                      export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                      export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                    '';
-                  }))
                   dontCheck
-                  #  disableLibraryProfiling
                 ];
               hasktorch =
-                lib.pipe
-                  (hfinal.callCabal2nix "hasktorch" ../hasktorch {})
-                  [
-                    (drv: drv.overrideAttrs (old: {
-                      preConfigure = (old.preConfigure or "") + ''
-                        export HOME="$TMPDIR"
-                        export XDG_CACHE_HOME="$TMPDIR"
-                        export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                        export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                        export LIBTORCH_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                        export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                        export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                        export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                      '';
-                      preBuild = (old.preBuild or "") + ''
-                        export HOME="$TMPDIR"
-                        export XDG_CACHE_HOME="$TMPDIR"
-                        export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                        export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                        export LIBTORCH_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                        export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                        export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                        export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                      '';
-                      preInstall = (old.preInstall or "") + ''
-                        export HOME="$TMPDIR"
-                        export XDG_CACHE_HOME="$TMPDIR"
-                        export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                        export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                        export LIBTORCH_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                        export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                        export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                        export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                      '';
-                    }))
-                    dontCheck
-                    # disableLibraryProfiling
-                  ];
-
-              libtorch-ffi-helper =
-                (hfinal.callCabal2nix "libtorch-ffi-helper" ../libtorch-ffi-helper {}).overrideAttrs (old: {
-                  preConfigure = (old.preConfigure or "") + ''
-                    export HOME="$TMPDIR"
-                    export XDG_CACHE_HOME="$TMPDIR"
-                    export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                    export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                    export LIBTORCH_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                    export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                    export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                    export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                  '';
-                  preBuild = (old.preBuild or "") + ''
-                    export HOME="$TMPDIR"
-                    export XDG_CACHE_HOME="$TMPDIR"
-                    export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                    export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                    export LIBTORCH_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                    export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                    export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                    export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                  '';
-                  preInstall = (old.preInstall or "") + ''
-                    export HOME="$TMPDIR"
-                    export XDG_CACHE_HOME="$TMPDIR"
-                    export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                    export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                    export LIBTORCH_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                    export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                    ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                    export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                    export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                  '';
-                });
-
+                (hfinal.callCabal2nix "hasktorch" ../hasktorch {}).overrideAttrs hasktorchParams;
+              libtorch-ffi-helper = (hfinal.callCabal2nix "libtorch-ffi-helper" ../libtorch-ffi-helper {}).overrideAttrs hasktorchParams;
               libtorch-ffi =
                 lib.pipe
-                  (hfinal.callCabal2nix "libtorch-ffi" ../libtorch-ffi {
-                    inherit torch c10 torch_cpu;
-                  })
-                  [
-                    (drv: drv.overrideAttrs (old: {
-                      preConfigure = (old.preConfigure or "") + ''
-                        export HOME="$TMPDIR"
-                        export XDG_CACHE_HOME="$TMPDIR"
-                        export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                        export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                        export LIBTORCH_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                        export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                        export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                        export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                      '';
-                      preBuild = (old.preBuild or "") + ''
-                        export HOME="$TMPDIR"
-                        export XDG_CACHE_HOME="$TMPDIR"
-                        export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                        export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                        export LIBTORCH_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                        export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                        export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                        export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                      '';
-                      preInstall = (old.preInstall or "") + ''
-                        export HOME="$TMPDIR"
-                        export XDG_CACHE_HOME="$TMPDIR"
-                        export HASKTORCH_LIB_PATH="$XDG_CACHE_HOME/libtorch/lib:$XDG_CACHE_HOME/mklml/lib/:$XDG_CACHE_HOME/libtokenizers/lib"
-                        export LD_LIBRARY_PATH=$HASKTORCH_LIB_PATH:$LD_LIBRARY_PATH
-                        export LIBTORCH_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtorch_2_5_0_cpu}/libtorch "$XDG_CACHE_HOME/libtorch"
-                        export LIBTOKENIZERS_SKIP_DOWNLOAD=1
-                        ln -sfn ${libtokenizers}/libtokenizers "$XDG_CACHE_HOME/libtokenizers"
-                        export LIBTORCH_HOME="$XDG_CACHE_HOME/libtorch"
-                        export CMAKE_PREFIX_PATH="$LIBTORCH_HOME"
-                      '';
-                    }))
-                    (appendConfigureFlag
-                      "--extra-include-dirs=${lib.getDev torch}/include/torch/csrc/api/include")
-                  ];
+                  ((hfinal.callCabal2nix "libtorch-ffi" ../libtorch-ffi { inherit c10 torch_cpu torch; }).overrideAttrs hasktorchParams)
+                [
+                  (appendConfigureFlag
+                    "--extra-include-dirs=${lib.getDev torch}/include/torch/csrc/api/include")
+                ];
 
               # Hasktorch Forks
               # WARNING: Does not build with GHC 9.8
