@@ -3,10 +3,10 @@ packages:
     libtorch-ffi/*.cabal
     libtorch-ffi-helper/*.cabal
     hasktorch/*.cabal
-    examples/*.cabal
-    experimental/untyped-nlp/untyped-nlp.cabal
+--    examples/*.cabal
+--    experimental/untyped-nlp/untyped-nlp.cabal
 --  experimental/dataloader-cifar10/dataloader-cifar10.cabal
-    experimental/bounding-box/bounding-box.cabal
+--    experimental/bounding-box/bounding-box.cabal
 
 -- source-repository-package
 --     type: git

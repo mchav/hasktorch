@@ -92,7 +92,7 @@ platformTag =
     (OSX,    AArch64) -> "macos-arm64"
     (OSX,    X86_64)  -> "macos-x86_64"
     (Linux,  X86_64)  -> "linux-x86_64"
-    -- add more as needed
+    (Windows, X86_64) -> "win-x86_64"
     _ -> error $ "Unsupported platform: " <> show (buildOS, buildArch)
 
 getCudaFlavor :: IO String
@@ -192,7 +192,11 @@ computeURL = do
                 , "libtorch-linux.zip" )
       cudaVersion -> ( "https://download.pytorch.org/libtorch/" ++ cudaVersion ++"/libtorch-cxx11-abi-shared-with-deps-" ++ v ++ "%2B" ++ cudaVersion ++ ".zip"
                 , "libtorch-linux-" ++ cudaVersion ++ ".zip" )
-    Windows -> error "Windows not supported by this setup"
+    Windows -> case flavor of
+      "cpu" -> ( "https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-" ++ v ++ "%2Bcpu.zip"
+               , "libtorch-windows.zip")
+      cudaVersion -> ( "https://download.pytorch.org/libtorch/" ++ cudaVersion ++ "/libtorch-win-shared-with-deps-" ++ v ++ "%2B" ++ cudaVersion ++ ".zip"
+                     , "libtorch-windows-" ++ cudaVersion ++ ".zip")
 
 -- Add -ld_classic flag to GHC program arguments for macOS
 addLdClassicFlag :: ProgramDb -> ProgramDb
