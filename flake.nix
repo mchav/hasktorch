@@ -92,6 +92,7 @@
                 nativeBuildInputs = nativeBuildInputs pkgsCuda;
               };
             };
+          checks = self'.packages;
           apps = {
             codegen-exe = {
               type = "app";
