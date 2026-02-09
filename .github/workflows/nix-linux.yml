@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: wimpysworld/nothing-but-nix@main
       - uses: cachix/install-nix-action@v31
       - uses: DeterminateSystems/magic-nix-cache-action@main
         with:
@@ -21,10 +22,10 @@ jobs:
             # nix build .#hasktorch-gradually-typed-cpu
             nix build --accept-flake-config .#libtorch-ffi-cpu
             nix build --accept-flake-config .#libtorch-ffi-helper-cpu
-            # nix build --accept-flake-config .#codegen-cuda
-            # nix build --accept-flake-config .#hasktorch-cuda
+            nix build --accept-flake-config .#codegen-cuda
+            nix build --accept-flake-config .#hasktorch-cuda
             # nix build .#hasktorch-gradually-typed-cuda
-            # nix build --accept-flake-config .#libtorch-ffi-cuda
-            # nix build --accept-flake-config .#libtorch-ffi-helper-cuda
+            nix build --accept-flake-config .#libtorch-ffi-cuda
+            nix build --accept-flake-config .#libtorch-ffi-helper-cuda
             nix build --accept-flake-config .#devShells.x86_64-linux.cpu
-            # nix build --accept-flake-config .#devShells.x86_64-linux.cuda
+            nix build --accept-flake-config .#devShells.x86_64-linux.cuda
